@@ -1,6 +1,7 @@
 {
   "$schema": "./node_modules/wrangler/config-schema.json",
   "name": "regal-trip-command-center",
+  "account_id": "823bbb536de6efcc130ccba8ced33416",
   "main": "src/worker.js",
   "compatibility_date": "2026-07-08",
   "assets": {
