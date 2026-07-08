@@ -1,0 +1,41 @@
+-- Itinerary days (status matches current plan)
+INSERT INTO itinerary_days (day_id, date_label, title, status, sort_order) VALUES
+ ('jul27','Mon · Jul 27','Land Seattle → RV pickup → Bainbridge','partial',1),
+ ('jul28','Tue · Jul 28','Hurricane Ridge + Madison Falls → RV@Olympic','planned',2),
+ ('jul29','Wed · Jul 29','Lake Crescent → Sol Duc → Hard Rain','partial',3),
+ ('jul30','Thu · Jul 30','Dawn at the Hoh → coast → Lake Quinault','planned',4),
+ ('jul31','Fri · Jul 31','Drive to Portland — arrive before Shabbat','partial',5),
+ ('aug1','Sat · Aug 1','Shabbat in Portland — RV parked','shabbat',6),
+ ('aug2','Sun · Aug 2','Portland → surfperch + Cape Perpetua → Tillicum','partial',7),
+ ('aug3','Mon · Aug 3','Tidepools → Sea Lion Caves → dunes → Bullards Beach','planned',8),
+ ('aug4','Tue · Aug 4','Sand dollars → Boardman → Harris Beach','planned',9),
+ ('aug5','Wed · Aug 5','Smith River edge → canopy → Avenue → Giant Redwoods','planned',10),
+ ('aug6','Thu · Aug 6','101 south → Goat Rock seals → Doran','planned',11),
+ ('aug7','Fri · Aug 7','Doran → RV drop-off → Palo Alto before Shabbat','partial',12),
+ ('aug8','Sat · Aug 8','Shabbat in Palo Alto','shabbat',13),
+ ('aug9','Sun · Aug 9','Fly home: SFO → JFK','partial',14);
+
+-- A compact set of key events per day (the assistant + web can fill more later).
+INSERT INTO events (day_id, time_label, label, note, sort_order) VALUES
+ ('jul27','12:43 PM','AS 230 lands SEA','6 people + bags + car seats; out ~1:30 PM. Road Bear ~10 min away.',1),
+ ('jul27','~2:15 PM','Road Bear RV pickup','~1 hr walkthrough; fill fresh tank before leaving.',2),
+ ('jul27','Evening','Bainbridge Island overnight','Lean: drive around via Tacoma vs. rush-hour ferry.',3),
+ ('jul28','Night','RV@Olympic #2825','Back-in site at check-in; Walmart nearby for resupply + water.',1),
+ ('jul29','PM','Hard Rain Cafe (booked)','Electric, no sewer; dawn access to Hoh. Add 4 kids; cancel Quileute.',1),
+ ('jul30','8 AM','Hall of Mosses','Minutes from Hard Rain — beat the gate queue.',1),
+ ('jul30','Night','Rain Forest Resort Village (booked)','Lakeside, laundry, dump/fill here. Shortens Friday.',2),
+ ('jul31','Early AM','Depart Quinault → Portland','~3.5–4.5 hr RV (verify). Backward-schedule from candle lighting.',1),
+ ('jul31','PM','Receive LA frozen shipment','Confirm Frumie can receive + freeze.',2),
+ ('aug2','PM','Guided surfperch (kosher, whole family)','Gear provided; tide-timed. Cape Perpetua fallback.',1),
+ ('aug2','Night','Tillicum site 55 (booked)','E/W hookup, ~1/10 mi to shore.',2),
+ ('aug3','Day','Bob Creek tidepools · Sea Lion Caves · Florence dunes','Sandboarding — the big kid hour.',1),
+ ('aug3','Night','Bullards Beach B61 (booked)','Full hookup; dump/showers night.',2),
+ ('aug4','7:30 AM','Face Rock sand dollars','Low tide, before crowds.',1),
+ ('aug4','Night','Harris Beach B36 (booked!)','Sea stacks + Bird Island. Cancel Turtle Rock #694434.',2),
+ ('aug5','AM','Smith River edge-wade (not a swim)','Cold moving water — big kids ankle-deep only.',1),
+ ('aug5','Night','Giant Redwoods #359312','On the Avenue; gates 9 PM; no cell service; Eel River swim hole.',2),
+ ('aug6','PM','Goat Rock harbor seals (Jenner)','Cold, foggy, wild — the wildlife closer.',1),
+ ('aug6','Night','Doran Jetty 118 (booked)','Dry — dump/fill Fri AM before drop-off.',2),
+ ('aug7','AM','Doran → San Leandro drop-off','~2–2.5 hr. Dump+fuel first. Then 2 UberXL → Palo Alto (own car seats).',1),
+ ('aug7','~7:50 PM','Candle lighting, Palo Alto (verify)','2nd frozen shipment arrives AM.',2),
+ ('aug9','1:38 PM','AS 42 SFO T1 → JFK T8 10:26 PM','Leave Airbnb ~10:30 AM. Pre-arrange JFK→Staten Island pickup.',1);

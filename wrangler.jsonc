@@ -1,0 +1,19 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "regal-trip-command-center",
+  "main": "src/worker.js",
+  "compatibility_date": "2026-07-08",
+  "assets": {
+    "directory": "./public",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "regal-trip",
+      "database_id": "PASTE_DATABASE_ID_AFTER_CREATE",
+      "migrations_dir": "migrations"
+    }
+  ],
+  "observability": { "enabled": true }
+}
