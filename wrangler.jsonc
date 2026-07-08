@@ -11,7 +11,7 @@
     {
       "binding": "DB",
       "database_name": "regal-trip",
-      "database_id": "PASTE_DATABASE_ID_AFTER_CREATE",
+      "database_id": "71b3c01c-bfec-433a-ad0d-499f9d193974",
       "migrations_dir": "migrations"
     }
   ],
