@@ -42,7 +42,7 @@ jobs:
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN_Trip_Planner }}
-          preCommands: wrangler d1 migrations apply regal-trip --remote --yes
+          preCommands: wrangler d1 migrations apply regal-trip --remote
           command: deploy
           secrets: |
             ANTHROPIC_API_KEY
