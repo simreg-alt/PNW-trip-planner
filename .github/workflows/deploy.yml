@@ -47,4 +47,7 @@ jobs:
           secrets: |
             ANTHROPIC_API_KEY
         env:
-          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          # The Worker secret must be named ANTHROPIC_API_KEY (worker.js reads
+          # env.ANTHROPIC_API_KEY); its value comes from the GitHub secret the
+          # user created, CLAUDE_API_TRIP_PLANNER.
+          ANTHROPIC_API_KEY: ${{ secrets.CLAUDE_API_TRIP_PLANNER }}
