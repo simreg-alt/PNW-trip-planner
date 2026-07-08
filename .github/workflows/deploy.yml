@@ -1,10 +1,12 @@
 name: Deploy Worker
 
 # Auto-deploy the Trip Command Center to Cloudflare on every push to the
-# default branch. Manual runs are available via the "Run workflow" button.
+# active branch. `claude/new-session-tqvlk0` is the repo's current default
+# branch; `main` is included so this keeps working if the project is later
+# promoted to a conventional `main`. Manual runs: the "Run workflow" button.
 on:
   push:
-    branches: [main]
+    branches: [claude/new-session-tqvlk0, main]
     paths:
       - "src/**"
       - "public/**"

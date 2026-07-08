@@ -48,7 +48,9 @@ add a route like `trip.yourdomain.com`.
 
 ## Auto-deploy on push (GitHub Actions)
 `.github/workflows/deploy.yml` redeploys the Worker automatically on every push to
-`main` (and can be run manually from the Actions tab). One-time setup:
+the active branch (currently `claude/new-session-tqvlk0`; `main` is also wired up
+for when the project moves there) and can be run manually from the Actions tab.
+One-time setup:
 
 1. Do the manual first deploy above at least once — this creates the D1 database,
    sets the `ANTHROPIC_API_KEY` secret (which persists on the Worker, so CI never
