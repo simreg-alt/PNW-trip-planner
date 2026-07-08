@@ -43,10 +43,13 @@ jobs:
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN_Trip_Planner }}
           command: deploy
-          secrets: |
-            ANTHROPIC_API_KEY
-        env:
-          # The Worker secret must be named ANTHROPIC_API_KEY (worker.js reads
+          # Deploy first (creates the Worker), THEN set the secret — you cannot
+          # attach a secret to a Worker that does not exist yet. The Worker
+          # secret must be named ANTHROPIC_API_KEY (worker.js reads
           # env.ANTHROPIC_API_KEY); its value comes from the GitHub secret the
-          # user created, CLAUDE_API_TRIP_PLANNER.
+          # user created, CLAUDE_API_TRIP_PLANNER. printf (no trailing newline)
+          # keeps the key byte-for-byte intact.
+          postCommands: |
+            printf '%s' "$ANTHROPIC_API_KEY" | npx wrangler secret put ANTHROPIC_API_KEY
+        env:
           ANTHROPIC_API_KEY: ${{ secrets.CLAUDE_API_TRIP_PLANNER }}
