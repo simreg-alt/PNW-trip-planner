@@ -46,6 +46,24 @@ That URL is accessible from anywhere — phone, laptop, share with Shaindy.
 In the Cloudflare dashboard → Workers & Pages → your worker → Settings → Domains & Routes,
 add a route like `trip.yourdomain.com`.
 
+## Auto-deploy on push (GitHub Actions)
+`.github/workflows/deploy.yml` redeploys the Worker automatically on every push to
+`main` (and can be run manually from the Actions tab). One-time setup:
+
+1. Do the manual first deploy above at least once — this creates the D1 database,
+   sets the `ANTHROPIC_API_KEY` secret (which persists on the Worker, so CI never
+   needs it), and lets you paste the real `database_id` into **wrangler.jsonc**.
+2. Create a Cloudflare API token (dashboard → My Profile → API Tokens → "Edit
+   Cloudflare Workers" template) and grab your Account ID (Workers & Pages → right
+   sidebar).
+3. Add both as GitHub repo secrets (Settings → Secrets and variables → Actions):
+   - `CLOUDFLARE_API_TOKEN`
+   - `CLOUDFLARE_ACCOUNT_ID`
+
+After that, merging to `main` builds and deploys the site — no local wrangler needed.
+The workflow also runs `wrangler d1 migrations apply --remote` first, so new
+migrations ship with the deploy.
+
 ## How updates work (important — read this)
 - **Live data** (bookings, chat, open items) is stored in D1 and updates in real time as
   you or the in-site assistant change things. No redeploy needed for data changes.
