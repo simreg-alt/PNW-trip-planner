@@ -50,21 +50,22 @@ add a route like `trip.yourdomain.com`.
 `.github/workflows/deploy.yml` redeploys the Worker automatically on every push to
 the active branch (currently `claude/new-session-tqvlk0`; `main` is also wired up
 for when the project moves there) and can be run manually from the Actions tab.
-One-time setup:
+One-time setup (all done in websites — no terminal needed):
 
-1. Do the manual first deploy above at least once — this creates the D1 database,
-   sets the `ANTHROPIC_API_KEY` secret (which persists on the Worker, so CI never
-   needs it), and lets you paste the real `database_id` into **wrangler.jsonc**.
-2. Create a Cloudflare API token (dashboard → My Profile → API Tokens → "Edit
-   Cloudflare Workers" template) and grab your Account ID (Workers & Pages → right
-   sidebar).
-3. Add both as GitHub repo secrets (Settings → Secrets and variables → Actions):
-   - `CLOUDFLARE_API_TOKEN`
-   - `CLOUDFLARE_ACCOUNT_ID`
+1. Create the D1 database in the Cloudflare dashboard (Storage & Databases → D1 →
+   Create database, name it exactly `regal-trip`) and copy its **Database ID**.
+   Paste that ID into **wrangler.jsonc** (replace `PASTE_DATABASE_ID_AFTER_CREATE`),
+   editing the file directly on GitHub.
+2. Add three GitHub repo secrets (Settings → Secrets and variables → Actions →
+   New repository secret):
+   - `CLOUDFLARE_API_TOKEN` — from dashboard → My Profile → API Tokens → "Edit
+     Cloudflare Workers" template.
+   - `CLOUDFLARE_ACCOUNT_ID` — from Workers & Pages → right sidebar.
+   - `ANTHROPIC_API_KEY` — from console.anthropic.com → API Keys.
 
-After that, merging to `main` builds and deploys the site — no local wrangler needed.
-The workflow also runs `wrangler d1 migrations apply --remote` first, so new
-migrations ship with the deploy.
+Once the secrets exist and the Database ID is in place, every push (or a manual
+run from the Actions tab) applies migrations, deploys the Worker, and uploads the
+Anthropic key as a Worker secret — no local wrangler needed.
 
 ## How updates work (important — read this)
 - **Live data** (bookings, chat, open items) is stored in D1 and updates in real time as
