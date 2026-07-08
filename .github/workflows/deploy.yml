@@ -34,15 +34,14 @@ jobs:
       - name: Install dependencies
         run: npm install
 
-      # Applies any un-applied D1 migrations, deploys the Worker, and uploads
-      # the ANTHROPIC_API_KEY as a Worker secret — so no terminal is ever
-      # needed. Requires the D1 database to exist and its id to be filled into
-      # wrangler.jsonc (see DEPLOY.md). Migration apply is idempotent.
+      # Deploys the Worker and uploads the ANTHROPIC_API_KEY as a Worker secret.
+      # The D1 schema + seed are applied once by hand in the Cloudflare D1
+      # console (see migrations/setup-db.sql / DEPLOY.md), so the deploy token
+      # only needs Workers Scripts: Edit — no D1 API permission required.
       - name: Deploy to Cloudflare
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN_Trip_Planner }}
-          preCommands: wrangler d1 migrations apply regal-trip --remote
           command: deploy
           secrets: |
             ANTHROPIC_API_KEY
