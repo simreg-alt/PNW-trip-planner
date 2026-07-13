@@ -56,10 +56,28 @@
   #chat.open{display:flex}
   .chat-head{padding:12px 16px;border-bottom:1px solid var(--border);display:flex;
     align-items:center;justify-content:space-between}
-  .chat-log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px}
-  .msg{max-width:85%;padding:9px 12px;border-radius:12px;font-size:.9rem;line-height:1.35;white-space:pre-wrap}
-  .msg.user{align-self:flex-end;background:var(--pine);color:#fff}
-  .msg.assistant{align-self:flex-start;background:var(--pineSoft);color:var(--ink)}
+  .chat-log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+  .msg-wrap{display:flex;flex-direction:column;max-width:90%}
+  .msg-wrap.end{align-self:flex-end;align-items:flex-end}
+  .msg-wrap.start{align-self:flex-start;align-items:flex-start}
+  .msg{padding:10px 13px;border-radius:14px;font-size:.92rem;line-height:1.5;
+    -webkit-user-select:text;user-select:text;overflow-wrap:anywhere}
+  .msg.user{background:var(--pine);color:#fff}
+  .msg.assistant{background:var(--pineSoft);color:var(--ink)}
+  .msg p{margin:0 0 .55em}
+  .msg p:last-child,.msg ul:last-child,.msg ol:last-child{margin-bottom:0}
+  .msg ul,.msg ol{margin:.35em 0 .55em;padding-left:1.3em}
+  .msg li{margin:.18em 0}
+  .msg .mdh{font-weight:700;margin:.2em 0 .35em}
+  .msg strong{font-weight:700}
+  .msg code{font-family:ui-monospace,Menlo,monospace;font-size:.85em;
+    background:rgba(24,42,32,.09);padding:1px 5px;border-radius:5px}
+  .msg.user code{background:rgba(255,255,255,.22)}
+  .msg a{color:var(--pine);text-decoration:underline;word-break:break-word}
+  .msg.user a{color:#fff}
+  .msg-copy{margin-top:4px;font-size:.72rem;color:var(--sub);background:none;border:0;
+    cursor:pointer;padding:2px 2px;font-family:ui-monospace,Menlo,monospace}
+  .msg-copy:hover{color:var(--pine)}
   .chat-in{display:flex;gap:8px;padding:12px;border-top:1px solid var(--border)}
   .chat-in input{flex:1;border:1px solid var(--border);border-radius:10px;padding:10px;font-family:inherit;font-size:.9rem}
   .chat-in button{background:var(--pine);color:#fff;border:0;border-radius:10px;padding:0 16px;font-weight:600;cursor:pointer}
@@ -90,7 +108,7 @@
     <button onclick="toggleChat()" style="border:0;background:transparent;font-size:1.2rem;cursor:pointer">×</button>
   </div>
   <div class="chat-log" id="log">
-    <div class="msg assistant">Hi! Ask me anything about the trip — I can check live weather/tides/hours, and I can edit bookings or add to-dos for you.</div>
+    <div class="msg-wrap start"><div class="msg assistant">Hi! Ask me anything about the trip — I can check live weather/tides/hours, and I can edit bookings or add to-dos for you.</div></div>
   </div>
   <div class="chat-in">
     <input id="chatInput" placeholder="e.g. What's the weather in Bandon Aug 3?" onkeydown="if(event.key==='Enter')send()"/>
@@ -161,21 +179,75 @@ async function loadHistory(){
   try{const r=await fetch('/api/chat/history');const {messages}=await r.json();
     messages.forEach(m=>addMsg(m.role,m.content));}catch(e){}
 }
+// --- tiny, safe Markdown renderer (escape first, then format) ---
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
+function mdInline(t){
+  t=t.replace(/`([^`]+)`/g,'<code>$1</code>');
+  t=t.replace(/\*\*([^*]+)\*\*/g,'<strong>$1</strong>');
+  t=t.replace(/__([^_]+)__/g,'<strong>$1</strong>');
+  t=t.replace(/(^|[^*])\*(?!\s)([^*\n]+?)\*/g,'$1<em>$2</em>');
+  // [text](url) markdown links
+  t=t.replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g,'<a href="$2" target="_blank" rel="noopener">$1</a>');
+  // bare URLs — only at start / after a space or "(", so a URL already inside
+  // an href="..." from the line above is never wrapped a second time.
+  t=t.replace(/(^|[\s(])(https?:\/\/[^\s<)]+)/g,'$1<a href="$2" target="_blank" rel="noopener">$2</a>');
+  return t;
+}
+function mdToHtml(src){
+  const lines=escapeHtml(src).split(/\r?\n/); let out='',i=0;
+  const isUl=l=>/^\s*[-*]\s+/.test(l), isOl=l=>/^\s*\d+\.\s+/.test(l),
+        isBlank=l=>/^\s*$/.test(l), isH=l=>/^\s*#{1,6}\s+/.test(l);
+  while(i<lines.length){
+    const line=lines[i], h=line.match(/^\s*(#{1,6})\s+(.*)/);
+    if(h){out+='<p class="mdh">'+mdInline(h[2])+'</p>';i++;continue;}
+    if(isUl(line)){out+='<ul>';
+      while(i<lines.length&&isUl(lines[i])){out+='<li>'+mdInline(lines[i].replace(/^\s*[-*]\s+/,''))+'</li>';i++;}
+      out+='</ul>';continue;}
+    if(isOl(line)){out+='<ol>';
+      while(i<lines.length&&isOl(lines[i])){out+='<li>'+mdInline(lines[i].replace(/^\s*\d+\.\s+/,''))+'</li>';i++;}
+      out+='</ol>';continue;}
+    if(isBlank(line)){i++;continue;}
+    const para=[];
+    while(i<lines.length&&!isBlank(lines[i])&&!isUl(lines[i])&&!isOl(lines[i])&&!isH(lines[i])){para.push(lines[i]);i++;}
+    out+='<p>'+para.map(mdInline).join('<br>')+'</p>';
+  }
+  return out;
+}
+function renderMsg(el,role,text){
+  el.innerHTML = role==='assistant' ? mdToHtml(text) : escapeHtml(text).replace(/\n/g,'<br>');
+}
+function copyBtn(text){
+  const b=document.createElement('button');b.className='msg-copy';b.textContent='⧉ Copy';
+  b.onclick=()=>{
+    const done=()=>{b.textContent='✓ Copied';setTimeout(()=>b.textContent='⧉ Copy',1500);};
+    if(navigator.clipboard&&navigator.clipboard.writeText) navigator.clipboard.writeText(text).then(done).catch(()=>b.textContent='(select to copy)');
+    else b.textContent='(select to copy)';
+  };
+  return b;
+}
 function addMsg(role,text){
   const log=document.getElementById('log');
-  const d=document.createElement('div');d.className='msg '+role;d.textContent=text;
-  log.appendChild(d);log.scrollTop=log.scrollHeight;
+  const wrap=document.createElement('div');wrap.className='msg-wrap '+(role==='user'?'end':'start');
+  const d=document.createElement('div');d.className='msg '+role;renderMsg(d,role,text);
+  wrap.appendChild(d);
+  if(role==='assistant'&&text) wrap.appendChild(copyBtn(text));
+  log.appendChild(wrap);log.scrollTop=log.scrollHeight;
 }
 async function send(){
   const inp=document.getElementById('chatInput');const text=inp.value.trim();if(!text)return;
   inp.value='';addMsg('user',text);
+  const log=document.getElementById('log');
+  const wrap=document.createElement('div');wrap.className='msg-wrap start';
   const thinking=document.createElement('div');thinking.className='msg assistant';thinking.textContent='…';
-  document.getElementById('log').appendChild(thinking);
+  wrap.appendChild(thinking);log.appendChild(wrap);log.scrollTop=log.scrollHeight;
   try{
     const r=await fetch('/api/chat',{method:'POST',headers:{'content-type':'application/json'},
       body:JSON.stringify({message:text})});
     const data=await r.json();
-    thinking.textContent=data.reply||data.error||'(no response)';
+    const reply=data.reply||data.error||'(no response)';
+    renderMsg(thinking,'assistant',reply);
+    wrap.appendChild(copyBtn(reply));
+    log.scrollTop=log.scrollHeight;
     load(); // refresh state in case the assistant edited a booking
   }catch(e){thinking.textContent='Error: '+e.message;}
 }
