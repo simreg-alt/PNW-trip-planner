@@ -71,20 +71,24 @@ async function getState(env) {
 }
 
 async function upsertBooking(env, b) {
+  // D1 rejects `undefined` bindings, so coerce any missing field to null.
+  const v = (x) => (x === undefined ? null : x);
   if (b.id) {
     await env.DB.prepare(
       `UPDATE bookings SET name=?, site=?, confirmation=?, status=?, hookups=?,
          check_in=?, check_out=?, address=?, phone=?, notes=?, updated_at=datetime('now')
        WHERE id=?`
-    ).bind(b.name, b.site, b.confirmation, b.status, b.hookups,
-           b.check_in, b.check_out, b.address, b.phone, b.notes, b.id).run();
+    ).bind(v(b.name), v(b.site), v(b.confirmation), v(b.status), v(b.hookups),
+           v(b.check_in), v(b.check_out), v(b.address), v(b.phone), v(b.notes), b.id).run();
   } else {
     await env.DB.prepare(
       `INSERT INTO bookings (day_id, date_label, name, site, confirmation, status,
          hookups, check_in, check_out, address, phone, notes)
        VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`
-    ).bind(b.day_id, b.date_label, b.name, b.site, b.confirmation, b.status || "booked",
-           b.hookups, b.check_in, b.check_out, b.address, b.phone, b.notes).run();
+      // date_label is NOT NULL — fall back to the day_id if the model omits it.
+    ).bind(v(b.day_id), b.date_label || b.day_id || "", v(b.name), v(b.site), v(b.confirmation),
+           b.status || "booked", v(b.hookups), v(b.check_in), v(b.check_out),
+           v(b.address), v(b.phone), v(b.notes)).run();
   }
   await logChange(env, `Booking updated: ${b.name}`, JSON.stringify(b));
   return { ok: true };
