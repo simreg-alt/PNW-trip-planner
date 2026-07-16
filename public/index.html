@@ -46,6 +46,32 @@
   .item{display:flex;gap:10px;align-items:flex-start;padding:11px 14px;border-top:1px solid var(--border)}
   .item:first-child{border-top:0}
   .shabbat{background:var(--goldSoft);border-color:var(--goldBorder)}
+  /* inline edit controls */
+  .chk{background:none;border:1.5px solid var(--pine);color:var(--pine);width:22px;height:22px;
+    border-radius:50%;cursor:pointer;flex:none;display:flex;align-items:center;justify-content:center;
+    font-size:.8rem;line-height:1;padding:0}
+  .chk:hover{background:var(--pineSoft)}
+  .rowbtn{background:none;border:0;color:var(--sub);font-size:.95rem;cursor:pointer;padding:4px 6px;line-height:1}
+  .rowbtn:hover{color:var(--pine)}
+  .rowbtn.del:hover{color:var(--rust)}
+  .itembtns{display:flex;align-items:center;gap:1px}
+  .additem{display:flex;gap:6px;padding:11px 14px;border-top:1px solid var(--border);
+    align-items:center;flex-wrap:wrap}
+  .additem input{flex:1;min-width:150px;border:1px solid var(--border);border-radius:8px;
+    padding:8px;font-family:inherit;font-size:.85rem}
+  .additem select,.editform select{border:1px solid var(--border);border-radius:8px;padding:8px;
+    font-family:inherit;font-size:.85rem;background:#fff}
+  .additem button{background:var(--pine);color:#fff;border:0;border-radius:8px;padding:8px 14px;
+    font-weight:600;cursor:pointer;font-family:inherit;font-size:.85rem}
+  .editform{padding:12px 14px;display:flex;flex-direction:column;gap:7px;border-top:1px solid var(--border)}
+  .editform input,.editform textarea{border:1px solid var(--border);border-radius:8px;padding:8px;
+    font-family:inherit;font-size:.85rem;width:100%}
+  .editform .row{display:flex;gap:6px}
+  .editform .row>*{flex:1;min-width:0}
+  .editform .btns{display:flex;gap:6px;margin-top:2px}
+  .editform button{background:var(--pine);color:#fff;border:0;border-radius:8px;padding:8px 14px;
+    font-weight:600;cursor:pointer;font-family:inherit;font-size:.85rem}
+  .editform button.cancel{background:var(--border);color:var(--ink)}
   /* chat */
   #fab{position:fixed;right:16px;bottom:16px;background:var(--pine);color:#fff;border:0;
     border-radius:99px;padding:14px 18px;font-family:inherit;font-weight:600;cursor:pointer;
@@ -146,21 +172,114 @@ function renderTimeline(){
     el.appendChild(card);
   });
 }
-function renderBookings(){
-  const el=document.getElementById('bookings'); const c=document.createElement('div'); c.className='card';
-  c.innerHTML=STATE.bookings.map(b=>
-    '<div class="item"><div style="flex:1"><strong>'+b.date_label+'</strong> — '+b.name+
-    (b.site?' <span class="mono muted">('+b.site+')</span>':'')+
-    (b.confirmation?'<br><span class="muted mono">conf '+b.confirmation+'</span>':'')+
-    (b.notes?'<br><span class="muted">'+b.notes+'</span>':'')+'</div>'+badge(b.status)+'</div>'
-  ).join(''); el.innerHTML=''; el.appendChild(c);
+function esc(s){return (s==null?'':String(s)).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+async function post(url,body){
+  const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+  return r.json();
 }
+function catOpts(sel){return ['logistics','tank','food','transport'].map(o=>'<option'+(o===sel?' selected':'')+'>'+o+'</option>').join('');}
+function statusOpts(sel){return ['booked','backup','shabbat','planned'].map(o=>'<option'+(o===sel?' selected':'')+'>'+o+'</option>').join('');}
+
+// ---- Bookings (with inline edit / delete) ----
+let editingBooking=null;
+function renderBookings(){
+  const el=document.getElementById('bookings'); el.innerHTML='';
+  const c=document.createElement('div'); c.className='card';
+  c.innerHTML=STATE.bookings.map(b=>{
+    if(editingBooking===b.id){
+      return '<div class="editform" data-bid="'+b.id+'">'+
+        '<input class="bf_name" placeholder="Name">'+
+        '<div class="row"><input class="bf_site" placeholder="Site"><input class="bf_conf" placeholder="Confirmation #"></div>'+
+        '<div class="row"><select class="bf_status">'+statusOpts(b.status)+'</select><input class="bf_hookups" placeholder="Hookups"></div>'+
+        '<textarea class="bf_notes" rows="2" placeholder="Notes"></textarea>'+
+        '<div class="btns"><button onclick="saveBooking('+b.id+')">Save</button>'+
+        '<button class="cancel" onclick="cancelEditBooking()">Cancel</button></div></div>';
+    }
+    return '<div class="item"><div style="flex:1"><strong>'+esc(b.date_label)+'</strong> — '+esc(b.name)+
+      (b.site?' <span class="mono muted">('+esc(b.site)+')</span>':'')+
+      (b.confirmation?'<br><span class="muted mono">conf '+esc(b.confirmation)+'</span>':'')+
+      (b.notes?'<br><span class="muted">'+esc(b.notes)+'</span>':'')+'</div>'+
+      '<div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">'+badge(b.status)+
+      '<span class="itembtns"><button class="rowbtn" title="Edit" onclick="editBooking('+b.id+')">✎</button>'+
+      '<button class="rowbtn del" title="Delete" onclick="deleteBookingUI('+b.id+')">✕</button></span></div></div>';
+  }).join('');
+  el.appendChild(c);
+  if(editingBooking!=null){
+    const ef=c.querySelector('.editform[data-bid="'+editingBooking+'"]');
+    const b=STATE.bookings.find(x=>x.id===editingBooking);
+    if(ef&&b){ef.querySelector('.bf_name').value=b.name||''; ef.querySelector('.bf_site').value=b.site||'';
+      ef.querySelector('.bf_conf').value=b.confirmation||''; ef.querySelector('.bf_status').value=b.status||'booked';
+      ef.querySelector('.bf_hookups').value=b.hookups||''; ef.querySelector('.bf_notes').value=b.notes||'';}
+  }
+}
+function editBooking(id){editingBooking=id; renderBookings();}
+function cancelEditBooking(){editingBooking=null; renderBookings();}
+async function saveBooking(id){
+  const ef=document.querySelector('.editform[data-bid="'+id+'"]'); if(!ef)return;
+  const cur=STATE.bookings.find(x=>x.id===id)||{};
+  await post('/api/booking',{ id,
+    name:ef.querySelector('.bf_name').value.trim(),
+    site:ef.querySelector('.bf_site').value.trim(),
+    confirmation:ef.querySelector('.bf_conf').value.trim(),
+    status:ef.querySelector('.bf_status').value,
+    hookups:ef.querySelector('.bf_hookups').value.trim(),
+    notes:ef.querySelector('.bf_notes').value.trim(),
+    // preserve fields not shown in the form so they aren't wiped
+    check_in:cur.check_in, check_out:cur.check_out, address:cur.address, phone:cur.phone });
+  editingBooking=null; load();
+}
+async function deleteBookingUI(id){
+  if(!confirm('Delete this booking? This cannot be undone.'))return;
+  await post('/api/booking/delete',{id}); load();
+}
+
+// ---- Open Items (complete / edit / delete / add) ----
+let editingItem=null;
 function renderTodo(){
-  const el=document.getElementById('todo'); const c=document.createElement('div'); c.className='card';
-  c.innerHTML=STATE.openItems.length? STATE.openItems.map(i=>
-    '<div class="item"><span style="flex:1">'+i.text+'</span><span class="muted mono">'+(i.category||'')+'</span></div>'
-  ).join('') : '<div class="item">All clear — no open items 🎉</div>';
-  el.innerHTML=''; el.appendChild(c);
+  const el=document.getElementById('todo'); el.innerHTML='';
+  const c=document.createElement('div'); c.className='card';
+  c.innerHTML = STATE.openItems.length ? STATE.openItems.map(i=>{
+    if(editingItem===i.id){
+      return '<div class="editform" data-eid="'+i.id+'">'+
+        '<input class="ei_text" placeholder="To-do text">'+
+        '<div class="row"><select class="ei_cat">'+catOpts(i.category)+'</select></div>'+
+        '<div class="btns"><button onclick="saveItem('+i.id+')">Save</button>'+
+        '<button class="cancel" onclick="cancelEditItem()">Cancel</button></div></div>';
+    }
+    return '<div class="item">'+
+      '<button class="chk" title="Mark done" onclick="resolveItem('+i.id+')">✓</button>'+
+      '<span style="flex:1">'+esc(i.text)+'</span>'+
+      '<span class="muted mono">'+esc(i.category||'')+'</span>'+
+      '<span class="itembtns"><button class="rowbtn" title="Edit" onclick="editItem('+i.id+')">✎</button>'+
+      '<button class="rowbtn del" title="Delete" onclick="deleteItem('+i.id+')">✕</button></span></div>';
+  }).join('') : '<div class="item">All clear — no open items 🎉</div>';
+  const add=document.createElement('div'); add.className='additem';
+  add.innerHTML='<input id="newItemText" placeholder="Add a to-do…" onkeydown="if(event.key===\'Enter\')addItem()">'+
+    '<select id="newItemCat">'+catOpts('logistics')+'</select>'+
+    '<button onclick="addItem()">Add</button>';
+  c.appendChild(add);
+  el.appendChild(c);
+  if(editingItem!=null){
+    const ef=c.querySelector('.editform[data-eid="'+editingItem+'"]');
+    const it=STATE.openItems.find(x=>x.id===editingItem);
+    if(ef&&it){ef.querySelector('.ei_text').value=it.text||''; ef.querySelector('.ei_cat').value=it.category||'logistics';}
+  }
+}
+function editItem(id){editingItem=id; renderTodo();}
+function cancelEditItem(){editingItem=null; renderTodo();}
+async function resolveItem(id){await post('/api/open-item',{resolveId:id}); load();}
+async function deleteItem(id){if(!confirm('Delete this item?'))return; await post('/api/open-item',{deleteId:id}); load();}
+async function saveItem(id){
+  const ef=document.querySelector('.editform[data-eid="'+id+'"]'); if(!ef)return;
+  const t=ef.querySelector('.ei_text').value.trim();
+  if(!t){editingItem=null; renderTodo(); return;}
+  await post('/api/open-item',{editId:id,text:t,category:ef.querySelector('.ei_cat').value});
+  editingItem=null; load();
+}
+async function addItem(){
+  const t=document.getElementById('newItemText').value.trim(); if(!t)return;
+  await post('/api/open-item',{text:t,category:document.getElementById('newItemCat').value});
+  load();
 }
 
 document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
