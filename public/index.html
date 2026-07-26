@@ -47,6 +47,14 @@
   .b-shabbat{background:var(--goldSoft);color:var(--gold)}
   .b-booked{background:var(--pineSoft);color:var(--pine)}
   .b-backup{background:var(--amberSoft);color:var(--amber)}
+  .stay{margin:0 16px 12px;padding:9px 11px;background:var(--pineSoft);border-radius:9px;
+    font-size:.88rem;line-height:1.45;user-select:text}
+  .shabbat .stay{background:#F4EBCF}
+  .stay-l{font-family:ui-monospace,Menlo,monospace;font-size:.66rem;text-transform:uppercase;
+    letter-spacing:.05em;color:var(--pine);font-weight:700}
+  .stay-a{font-size:.83rem;margin-top:2px}
+  .sitepill{display:inline-block;font-family:ui-monospace,Menlo,monospace;font-size:.7rem;font-weight:700;
+    background:#fff;border:1px solid var(--border);border-radius:6px;padding:1px 6px;margin-left:4px}
   .day-body{padding:0 16px 14px;user-select:text}
   .ev{display:flex;gap:12px;margin:10px 0}
   .ev .tm{width:74px;flex:none;text-align:right;font-family:ui-monospace,Menlo,monospace;
@@ -161,28 +169,67 @@
 <script>
 let STATE=null;
 async function load(){
-  const r=await fetch('/api/state'); STATE=await r.json();
+  try{
+    const r=await fetch('/api/state'); const s=await r.json();
+    if(!s||!Array.isArray(s.days)) throw new Error(s&&s.error||'no data');
+    STATE={days:s.days||[],events:s.events||[],bookings:s.bookings||[],
+           openItems:s.openItems||[],changeLog:s.changeLog||[]};
+  }catch(e){
+    document.getElementById('statusline').textContent=
+      'Offline — showing nothing yet. Reconnect to load the plan.';
+    return;
+  }
   renderTimeline(); renderBookings(); renderTodo();
   document.getElementById('statusline').textContent =
     STATE.bookings.length + ' nights booked · ' + STATE.openItems.length + ' open items';
 }
 function badge(s){return '<span class="badge b-'+s+'">'+s.toUpperCase()+'</span>';}
 
+function toggleDay(head){
+  const b=head.parentElement.querySelector('.day-body');
+  b.style.display = b.style.display==='none' ? 'block' : 'none';
+}
+function mapLink(addr){
+  return '<a href="https://maps.google.com/?q='+encodeURIComponent(addr)+'" target="_blank" rel="noopener">'+esc(addr)+'</a>';
+}
+// Where we sleep each night. Days with no booking of their own (Shabbat /
+// travel days) carry forward the most recent night's lodging.
+function stayStrip(dayId, dayIdx){
+  let b=STATE.bookings.find(x=>x.day_id===dayId), carried=false;
+  if(!b){
+    for(let i=dayIdx-1;i>=0;i--){
+      const prev=STATE.bookings.find(x=>x.day_id===STATE.days[i].day_id);
+      if(prev){b=prev;carried=true;break;}
+    }
+  }
+  if(!b) return '<div class="stay"><span class="stay-l">Sleeping</span> <span class="muted">not set</span></div>';
+  return '<div class="stay">'+
+    '<div><span class="stay-l">🏕 Sleeping</span> <strong>'+esc(b.name)+'</strong>'+
+      (carried?' <span class="muted" style="font-size:.78rem">(same as last night)</span>':'')+
+      (b.site?' <span class="sitepill">site '+esc(b.site)+'</span>':'')+'</div>'+
+    (b.address?'<div class="stay-a">'+mapLink(b.address)+'</div>':'')+
+    (b.confirmation||b.phone||b.check_in?'<div class="stay-a muted mono">'+
+      [b.confirmation?'conf '+esc(b.confirmation):'',
+       b.phone?'<a href="tel:'+esc(b.phone)+'">'+esc(b.phone)+'</a>':'',
+       b.check_in?'in '+esc(b.check_in):''].filter(Boolean).join(' · ')+'</div>':'')+
+    '</div>';
+}
 function renderTimeline(){
   const byDay={}; STATE.events.forEach(e=>{(byDay[e.day_id]=byDay[e.day_id]||[]).push(e)});
   const el=document.getElementById('timeline'); el.innerHTML='';
-  STATE.days.forEach(d=>{
+  STATE.days.forEach((d,idx)=>{
     const evs=(byDay[d.day_id]||[]);
     const card=document.createElement('div');
     card.className='card'+(d.status==='shabbat'?' shabbat':'');
     card.innerHTML=
-      '<div class="day-head" onclick="this.nextElementSibling.style.display=this.nextElementSibling.style.display===\'none\'?\'block\':\'none\'">'+
-        '<div class="t"><div class="date">'+d.date_label+'</div><div class="title">'+d.title+'</div></div>'+
+      '<div class="day-head" onclick="toggleDay(this)">'+
+        '<div class="t"><div class="date">'+esc(d.date_label)+'</div><div class="title">'+esc(d.title)+'</div></div>'+
         badge(d.status)+'</div>'+
+      stayStrip(d.day_id, idx)+
       '<div class="day-body" style="display:none">'+
-        evs.map(e=>'<div class="ev"><div class="tm">'+(e.time_label||'')+'</div><div class="bd">'+
-          '<div class="lb">'+e.label+'</div>'+(e.note?'<div class="nt">'+e.note+'</div>':'')+
-          (e.link?'<div class="nt"><a href="'+e.link+'" target="_blank" rel="noopener">'+(e.link_label||'link')+'</a></div>':'')+
+        evs.map(e=>'<div class="ev"><div class="tm">'+esc(e.time_label||'')+'</div><div class="bd">'+
+          '<div class="lb">'+esc(e.label)+'</div>'+(e.note?'<div class="nt">'+esc(e.note)+'</div>':'')+
+          (e.link?'<div class="nt"><a href="'+esc(e.link)+'" target="_blank" rel="noopener">'+esc(e.link_label||'link')+'</a></div>':'')+
           '</div></div>').join('')+
       '</div>';
     el.appendChild(card);

@@ -32,6 +32,8 @@
   .stay{border:1px solid #e6dcb6;background:var(--goldbg);border-radius:8px;padding:10px 12px;margin-bottom:10px}
   .stay .nm{font-weight:700;font-size:1rem;margin-bottom:4px}
   .stay .nm .st{font-family:ui-monospace,Menlo,monospace;font-size:.62rem;font-weight:700;text-transform:uppercase;border:1px solid var(--gold);color:var(--gold);border-radius:4px;padding:1px 6px;margin-left:6px}
+  .stay .nm .sitepill{font-family:ui-monospace,Menlo,monospace;font-size:.66rem;font-weight:700;
+    background:#fff;border:1px solid var(--gold);color:#6b5214;border-radius:4px;padding:1px 6px;margin-left:6px}
   .kv{font-size:.9rem;margin:1px 0}
   .kv b{display:inline-block;min-width:104px;color:var(--sub);font-weight:400}
   .kv .big{font-weight:700}
@@ -138,7 +140,9 @@ async function build(){
 
     let stayHtml='';
     if(stays.length){
-      stayHtml=stays.map(b=>'<div class="stay"><div class="nm">🏕 Tonight: '+esc(b.name)+'<span class="st">'+esc(b.status||'')+'</span></div>'+
+      stayHtml=stays.map(b=>'<div class="stay"><div class="nm">🏕 Tonight: '+esc(b.name)+
+        (b.site?'<span class="sitepill">SITE '+esc(b.site)+'</span>':'')+
+        '<span class="st">'+esc(b.status||'')+'</span></div>'+
         kv('Address',b.address)+kv('Phone',b.phone,true)+kv('Site #',b.site,true)+kv('Confirmation',b.confirmation,true)+
         kv('Hookups',b.hookups)+kv('Check-in',b.check_in)+kv('Check-out',b.check_out)+
         (b.notes?'<div class="note" style="margin-top:4px">'+esc(b.notes)+'</div>':'')+'</div>').join('');
