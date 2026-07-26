@@ -56,6 +56,8 @@
   .stay-l{font-family:ui-monospace,Menlo,monospace;font-size:.66rem;text-transform:uppercase;
     letter-spacing:.05em;color:var(--pine);font-weight:700}
   .stay-a{font-size:.83rem;margin-top:2px}
+  .stay .opt{margin-top:7px;padding-left:9px;border-left:3px solid var(--pine)}
+  .stay .opt:first-of-type{margin-top:5px}
   .sitepill{display:inline-block;font-family:ui-monospace,Menlo,monospace;font-size:.7rem;font-weight:700;
     background:#fff;border:1px solid var(--border);border-radius:6px;padding:1px 6px;margin-left:4px}
   .day-body{padding:0 16px 14px;user-select:text}
@@ -229,23 +231,33 @@ function mapLink(addr){
 // Where we sleep each night. Days with no booking of their own (Shabbat /
 // travel days) carry forward the most recent night's lodging.
 function stayStrip(dayId, dayIdx){
-  let b=STATE.bookings.find(x=>x.day_id===dayId), carried=false;
-  if(!b){
+  let list=STATE.bookings.filter(x=>x.day_id===dayId), carried=false;
+  if(!list.length){
     for(let i=dayIdx-1;i>=0;i--){
-      const prev=STATE.bookings.find(x=>x.day_id===STATE.days[i].day_id);
-      if(prev){b=prev;carried=true;break;}
+      const prev=STATE.bookings.filter(x=>x.day_id===STATE.days[i].day_id);
+      if(prev.length){list=prev;carried=true;break;}
     }
   }
-  if(!b) return '<div class="stay"><span class="stay-l">Sleeping</span> <span class="muted">not set</span></div>';
-  return '<div class="stay">'+
-    '<div><span class="stay-l">🏕 Sleeping</span> <strong>'+esc(b.name)+'</strong>'+
-      (carried?' <span class="muted" style="font-size:.78rem">(same as last night)</span>':'')+
+  if(!list.length) return '<div class="stay"><span class="stay-l">Sleeping</span> <span class="muted">not set</span></div>';
+  const multi=list.length>1;
+  const one=(b)=>'<div'+(multi?' class="opt"':'')+'>'+
+    '<div><strong>'+esc(b.name)+'</strong>'+
       (b.site?' <span class="sitepill">site '+esc(b.site)+'</span>':'')+'</div>'+
     (b.address?'<div class="stay-a">'+mapLink(b.address)+'</div>':'')+
-    (b.confirmation||b.phone||b.check_in?'<div class="stay-a muted mono">'+
-      [b.confirmation?'conf '+esc(b.confirmation):'',
-       b.phone?'<a href="tel:'+esc(b.phone)+'">'+esc(b.phone)+'</a>':'',
-       b.check_in?'in '+esc(b.check_in):''].filter(Boolean).join(' · ')+'</div>':'')+
+    ([b.confirmation?'conf '+esc(b.confirmation):'',
+      b.hookups?esc(b.hookups):'',
+      b.phone?'<a href="tel:'+esc(b.phone)+'">'+esc(b.phone)+'</a>':''].filter(Boolean).length
+      ? '<div class="stay-a muted mono">'+
+        [b.confirmation?'conf '+esc(b.confirmation):'',
+         b.hookups?esc(b.hookups):'',
+         b.phone?'<a href="tel:'+esc(b.phone)+'">'+esc(b.phone)+'</a>':''].filter(Boolean).join(' · ')+'</div>'
+      : '')+
+    '</div>';
+  return '<div class="stay">'+
+    '<div><span class="stay-l">🏕 Sleeping</span>'+
+      (multi?' <span class="muted" style="font-size:.78rem">'+list.length+' options held — decide on the day</span>':'')+
+      (carried?' <span class="muted" style="font-size:.78rem">(same as last night)</span>':'')+'</div>'+
+    list.map(one).join('')+
     '</div>';
 }
 function renderTimeline(){

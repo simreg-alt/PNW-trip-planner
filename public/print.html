@@ -34,6 +34,7 @@
   .daystatus{font-family:ui-monospace,Menlo,monospace;font-size:.62rem;font-weight:700;text-transform:uppercase;border:1px solid rgba(255,255,255,.5);border-radius:4px;padding:2px 6px}
   .dbody{padding:12px 14px}
   .stay{border:1px solid #e6dcb6;background:var(--goldbg);border-radius:8px;padding:10px 12px;margin-bottom:10px}
+  .optnote{font-size:.9rem;margin:2px 0 4px}
   .stay .nm{font-weight:700;font-size:1rem;margin-bottom:4px}
   .stay .nm .st{font-family:ui-monospace,Menlo,monospace;font-size:.62rem;font-weight:700;text-transform:uppercase;border:1px solid var(--gold);color:var(--gold);border-radius:4px;padding:1px 6px;margin-left:6px}
   .stay .nm .sitepill{font-family:ui-monospace,Menlo,monospace;font-size:.66rem;font-weight:700;
@@ -156,7 +157,10 @@ async function build(){
 
     let stayHtml='';
     if(stays.length){
-      stayHtml=stays.map(b=>'<div class="stay"><div class="nm">🏕 Tonight: '+esc(b.name)+
+      const multi=stays.length>1;
+      if(multi) stayHtml='<div class="optnote">🏕 Tonight — <b>'+stays.length+' options held</b>, decide on the day:</div>';
+      stayHtml+=stays.map((b,i)=>'<div class="stay"><div class="nm">'+
+        (multi?'Option '+(i+1)+': ':'🏕 Tonight: ')+esc(b.name)+
         (b.site?'<span class="sitepill">SITE '+esc(b.site)+'</span>':'')+
         '<span class="st">'+esc(b.status||'')+'</span></div>'+
         kv('Address',b.address)+kv('Phone',b.phone,true)+kv('Site #',b.site,true)+kv('Confirmation',b.confirmation,true)+
