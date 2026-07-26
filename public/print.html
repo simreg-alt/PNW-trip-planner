@@ -3,118 +3,169 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Regal Family Trip — Printable Itinerary</title>
+<title>Regal Family Trip — Daily Handbook</title>
 <style>
-  :root{--ink:#1a1a1a;--sub:#555;--line:#bbb;--pine:#2E4A3A}
+  :root{--ink:#1a1a1a;--sub:#555;--line:#c4c4c4;--pine:#2E4A3A;--soft:#eef2ee;--gold:#8a6a1f;--goldbg:#faf4e2}
   *{box-sizing:border-box}
-  body{margin:0;background:#f0f0f0;color:var(--ink);
-    font-family:Georgia,'Times New Roman',serif;line-height:1.4}
-  .sheet{max-width:820px;margin:16px auto;background:#fff;padding:34px 40px;
-    box-shadow:0 2px 12px rgba(0,0,0,.15)}
-  .bar{position:sticky;top:0;background:var(--pine);color:#fff;padding:10px 14px;display:flex;
+  body{margin:0;background:#ececec;color:var(--ink);font-family:Georgia,'Times New Roman',serif;line-height:1.4}
+  .sheet{max-width:840px;margin:16px auto;background:#fff;padding:34px 40px;box-shadow:0 2px 12px rgba(0,0,0,.15)}
+  .bar{position:sticky;top:0;z-index:5;background:var(--pine);color:#fff;padding:10px 14px;display:flex;
     gap:10px;align-items:center;justify-content:space-between;font-family:ui-monospace,Menlo,monospace;font-size:.8rem}
-  .bar button{background:#fff;color:var(--pine);border:0;border-radius:8px;padding:8px 16px;
-    font-weight:700;cursor:pointer;font-family:inherit}
-  h1{font-size:1.5rem;margin:0 0 2px}
-  h2{font-size:1.05rem;margin:22px 0 8px;border-bottom:2px solid var(--pine);padding-bottom:3px;color:var(--pine)}
-  h3{font-size:.98rem;margin:12px 0 3px}
-  .sub{color:var(--sub);font-size:.85rem}
+  .bar button{background:#fff;color:var(--pine);border:0;border-radius:8px;padding:8px 16px;font-weight:700;cursor:pointer;font-family:inherit}
+  h1{font-size:1.55rem;margin:0 0 2px}
+  .sub{color:var(--sub);font-size:.86rem}
+  h2{font-size:1.02rem;margin:20px 0 8px;border-bottom:2px solid var(--pine);padding-bottom:3px;color:var(--pine)}
   .mono{font-family:ui-monospace,Menlo,monospace}
-  .tag{display:inline-block;font-family:ui-monospace,Menlo,monospace;font-size:.66rem;font-weight:700;
-    text-transform:uppercase;border:1px solid var(--line);border-radius:4px;padding:1px 6px;margin-left:6px}
   ul{margin:6px 0;padding-left:20px}
   li{margin:3px 0}
-  .block{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:8px 0}
+  .callout{background:var(--soft);border:1px solid #d3ddd3;border-radius:8px;padding:12px 14px;margin:10px 0}
+  .callout .lbl{font-family:ui-monospace,Menlo,monospace;font-size:.68rem;text-transform:uppercase;letter-spacing:.05em;color:var(--pine);font-weight:700;margin-bottom:4px}
+  /* per-day */
+  .day{border:1px solid var(--line);border-radius:10px;margin:14px 0;overflow:hidden}
+  .dayhead{display:flex;align-items:center;gap:12px;background:var(--pine);color:#fff;padding:9px 14px}
+  .daynum{font-family:ui-monospace,Menlo,monospace;font-size:.7rem;background:rgba(255,255,255,.18);border-radius:5px;padding:3px 7px;white-space:nowrap}
+  .dayhead .dt{flex:1}
+  .dayhead .dow{font-size:1.02rem;font-weight:700}
+  .dayhead .ti{font-size:.82rem;opacity:.92}
+  .daystatus{font-family:ui-monospace,Menlo,monospace;font-size:.62rem;font-weight:700;text-transform:uppercase;border:1px solid rgba(255,255,255,.5);border-radius:4px;padding:2px 6px}
+  .dbody{padding:12px 14px}
+  .stay{border:1px solid #e6dcb6;background:var(--goldbg);border-radius:8px;padding:10px 12px;margin-bottom:10px}
+  .stay .nm{font-weight:700;font-size:1rem;margin-bottom:4px}
+  .stay .nm .st{font-family:ui-monospace,Menlo,monospace;font-size:.62rem;font-weight:700;text-transform:uppercase;border:1px solid var(--gold);color:var(--gold);border-radius:4px;padding:1px 6px;margin-left:6px}
   .kv{font-size:.9rem;margin:1px 0}
-  .kv b{display:inline-block;min-width:96px;color:var(--sub);font-weight:400}
-  .day{margin:10px 0;padding-bottom:8px;border-bottom:1px solid #e3e3e3}
-  .ev{margin:4px 0 4px 4px;padding-left:12px;border-left:2px solid #e0e0e0}
-  .ev .t{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;color:var(--sub)}
-  .note{color:var(--sub);font-size:.86rem}
-  .callout{background:#f6f3e9;border:1px solid #e2d9b8;border-radius:8px;padding:10px 12px;margin:8px 0}
+  .kv b{display:inline-block;min-width:104px;color:var(--sub);font-weight:400}
+  .kv .big{font-weight:700}
+  .secttitle{font-family:ui-monospace,Menlo,monospace;font-size:.66rem;text-transform:uppercase;letter-spacing:.05em;color:var(--pine);font-weight:700;margin:10px 0 3px}
+  .ev{margin:3px 0 3px 2px;padding-left:11px;border-left:2px solid #e0e0e0}
+  .ev .t{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;color:var(--sub);margin-right:4px}
+  .note{color:var(--sub);font-size:.85rem}
+  .rem li{margin:2px 0}
+  .notesbox{margin-top:10px}
+  .rule{border-bottom:1px solid #cfcfcf;height:23px}
   @media print{
     body{background:#fff}
     .sheet{box-shadow:none;margin:0;max-width:none;padding:0}
     .bar{display:none}
     h2{break-after:avoid}
-    .block,.day{break-inside:avoid}
-    @page{margin:14mm}
+    .day{break-inside:avoid}
+    .dayhead{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    .stay,.callout{-webkit-print-color-adjust:exact;print-color-adjust:exact}
+    @page{margin:13mm}
   }
 </style>
 </head>
 <body>
 <div class="bar">
-  <span>Regal Family Trip — printable</span>
+  <span>Regal Family — Daily Handbook</span>
   <button onclick="window.print()">🖨 Print / Save PDF</button>
 </div>
-<div class="sheet" id="sheet">
-  <h1>Regal Family — Pacific Northwest RV Trip</h1>
-  <div class="sub">Jul 27 – Aug 9, 2026 · Family of 6 · 29-ft Class C RV · Seattle → Olympic → Portland → Oregon Coast → Redwoods → SF Bay</div>
+<div class="sheet">
+  <h1>Regal Family — PNW RV Trip Handbook</h1>
+  <div class="sub">Jul 27 – Aug 9, 2026 · Family of 6 (adults + kids 9, 7, 3, 1) · 29-ft Class C RV · Seattle → Olympic → Portland → Oregon Coast → Redwoods → SF Bay</div>
 
-  <h2>Trip essentials &amp; things to keep in mind</h2>
-  <ul>
-    <li><b>Family:</b> 2 adults + kids 9, 7, 3, 1. Orthodox Jewish — <b>kosher food only</b>; <b>no RV travel Fri eve → Sat night</b> (Shabbat); modest/quiet beaches.</li>
-    <li><b>Rig:</b> 29-ft Class C, <b>paved roads only</b> (rental rule). Bring your 2 car seats for the RV + airport transfers.</li>
-    <li><b>Arrival (Mon Jul 27):</b> AS&nbsp;230 lands SEA 12:43&nbsp;PM → bags ~1:40 → ride ~5&nbsp;mi to Road Bear depot (near Des&nbsp;Moines Memorial Dr&nbsp;S &amp; S&nbsp;96th&nbsp;St; pickup 12:30–4&nbsp;PM). Allow <b>1–2&nbsp;hr</b> for orientation. <b>Target Walmart pickup ~5:00&nbsp;PM.</b> Confirm Road&nbsp;Bear <b>free airport shuttle</b> (needs online check-in ≥30 days prior) — it solves the car-seat-in-Uber problem.</li>
-    <li><b>Seattle→Bainbridge ferry:</b> <b>no reservation</b> — first-come, first-served. RV pays an <b>oversize (22&nbsp;ft+) fare</b> at the booth. ~35-min crossing, runs ~every 50–70&nbsp;min from Colman Dock (Pier&nbsp;52). RVs load in a separate lane and aren't guaranteed the next boat at peak — <b>arrive 45–60&nbsp;min early</b>, or <b>drive around via Tacoma</b> to skip the rush-hour wait.</li>
-    <li><b>Shabbat 1 — Portland (Fri Jul 31):</b> host Frumie Diskind; RV parked Fri eve–Sat night. <b>Confirm candle-lighting time.</b></li>
-    <li><b>Shabbat 2 — Palo Alto (Fri Aug 7):</b> after San Leandro RV drop-off. <b>Confirm candle-lighting time.</b></li>
-    <li><b>Frozen kosher food:</b> two LA shipments — Portland (Fri Jul 31) &amp; Palo Alto (Fri Aug 7). Confirm host/Airbnb can receive + freeze.</li>
-    <li><b>Drop-off day (Fri Aug 7):</b> Doran → dump &amp; fuel → San Leandro RV drop-off (confirm latest Friday drop time; depot closes 5&nbsp;PM) → 2× UberXL to Palo Alto with your own car seats.</li>
-    <li><b>Laundry / dump / water:</b> Rain Forest Resort Village (Quinault) — on-site laundry + dump/fill. Bullards Beach — dump/flush/showers. Doran — dry site but on-site dump + potable (dump/fill Fri AM before drop-off).</li>
-    <li><b>⚠ No cell service</b> at Giant Redwoods (Myers Flat) — download offline maps; gates close 9&nbsp;PM.</li>
-    <li><b>Fly home (Sun Aug 9):</b> AS&nbsp;42 SFO&nbsp;T1 1:38&nbsp;PM → JFK&nbsp;T8 10:26&nbsp;PM. Leave Airbnb ~10:30&nbsp;AM. Pre-arrange JFK→Staten Island pickup.</li>
-  </ul>
+  <div class="callout">
+    <div class="lbl">Read this first — rules that apply every day</div>
+    <ul style="margin:2px 0">
+      <li><b>Kosher only.</b> Two LA frozen-food shipments: Portland (Fri Jul 31) &amp; Palo Alto (Fri Aug 7) — confirm each host can receive + freeze.</li>
+      <li><b>Shabbat:</b> no RV travel Fri eve → Sat night. Two Shabbatot: Portland (Jul 31–Aug 1) &amp; Palo Alto (Aug 7–8). <b>Confirm both candle-lighting times.</b></li>
+      <li><b>Rig:</b> 29-ft Class C, <b>paved roads only</b>. Modest/quiet beaches. Keep 2 car seats with you for the RV + airport transfers.</li>
+      <li><b>Reprint this after edits</b> — it's built from your live app data, so it always shows the latest.</li>
+    </ul>
+  </div>
 
-  <div id="dynamic"><p class="note">Loading your live bookings &amp; day-by-day plan…</p></div>
+  <div id="todos"></div>
+  <div id="days"><p class="note">Loading your live plan…</p></div>
+  <div id="contacts"></div>
 
-  <div class="sub" style="margin-top:24px;border-top:1px solid var(--line);padding-top:8px">
-    Generated from your live trip data. Live app: regal-trip-command-center.office-823.workers.dev
+  <div class="sub" style="margin-top:22px;border-top:1px solid var(--line);padding-top:8px">
+    Live app: regal-trip-command-center.office-823.workers.dev · Handbook reflects data at print time.
   </div>
 </div>
 
 <script>
 function esc(s){return (s==null?'':String(s)).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
-function kv(label,val){return val?('<div class="kv"><b>'+label+'</b>'+esc(val)+'</div>'):'';}
+function kv(label,val,big){return val?('<div class="kv"><b>'+label+'</b><span'+(big?' class="big"':'')+'>'+esc(val)+'</span></div>'):'';}
+const DOW={Sun:'Sunday',Mon:'Monday',Tue:'Tuesday',Wed:'Wednesday',Thu:'Thursday',Fri:'Friday',Sat:'Saturday'};
+function fullDate(lbl){ // "Mon · Jul 27" -> "Monday · Jul 27"
+  const parts=String(lbl||'').split('·').map(s=>s.trim());
+  if(parts.length===2 && DOW[parts[0]]) return DOW[parts[0]]+' · '+parts[1];
+  return lbl||'';
+}
+
+// Curated day-specific reminders & questions (supplement the live events).
+const DAY_REMINDERS={
+  jul27:[
+    'Bags for 6 + car seats — allow to ~1:40 PM at SEA baggage claim.',
+    'CONFIRM Road Bear free airport shuttle (needs online check-in ≥30 days prior) — avoids putting car seats in an Uber.',
+    'Road Bear depot: pickup 12:30–4 PM; allow 1–2 hr orientation; fill the fresh-water tank before leaving.',
+    'Walmart grocery pickup: schedule the slot for ~5:00 PM. Nearest Supercenters: Renton (~15 min, inland) or Federal Way/Tacoma (on the drive-around route).',
+    'Seattle→Bainbridge FERRY: NO reservation, first-come; RV pays oversize (22 ft+) fare at the booth; ~35-min crossing from Colman Dock (Pier 52); arrive 45–60 min early (RVs load in a separate lane, can miss a boat at peak). OR drive around via Tacoma Narrows — longer but predictable.',
+  ],
+  jul28:['Hurricane Ridge + Madison Falls.','Back-in site assigned at check-in. Walmart minutes away — resupply + top off water.'],
+  jul29:['CALL Hard Rain 360-374-9288 to add the 4 kids to the booking.','Cancel the duplicate Quileute Oceanside booking, or confirm the keep-but-don’t-use decision.','Electric only, no sewer. Dawn access to the Hoh from here.'],
+  jul30:['Hall of Mosses ~8 AM to beat the gate queue.','Rain Forest Resort Village: on-site LAUNDRY + dump/fill — do it tonight; it shortens Friday.'],
+  jul31:['Depart Quinault early → Portland (~3.5–4.5 hr RV — VERIFY live).','Backward-schedule from candle-lighting — CONFIRM Portland time.','Receive LA frozen kosher shipment — confirm host Frumie can receive + freeze.','RV parked Fri eve → Sat night; no travel on Shabbat.'],
+  aug1:['Shabbat in Portland — RV parked, no driving.'],
+  aug2:['Guided surfperch (kosher, whole family) — tide-timed. PULL the Yachats tide chart to set the time.','Cape Perpetua as the fallback.','Tillicum site 55: E/W hookup, ~1/10 mi to shore, NO dump/showers.'],
+  aug3:['Bob Creek tidepools · Sea Lion Caves · Florence dunes (sandboarding — the big-kid hour).','Bullards Beach: full hookup; dump/showers tonight.'],
+  aug4:['Face Rock sand dollars ~7:30 AM at low tide, before crowds.','Verify tonight’s booking below — Harris Beach was cancelled for the refund and Turtle Rock kept.'],
+  aug5:['Smith River: edge-wade only, ankle-deep — cold moving water.','⚠ NO cell service at Giant Redwoods (Myers Flat). Download offline maps first. Gates close 9 PM. Eel River swim hole.'],
+  aug6:['Goat Rock harbor seals at Jenner.','Doran is a DRY site (on-site dump + potable). Dump/fill Fri AM before drop-off.'],
+  aug7:['Doran → San Leandro RV drop-off (~2–2.5 hr). DUMP + FUEL first.','CONFIRM latest Friday drop time (depot closes 5 PM).','2× UberXL → Palo Alto with your own car seats.','2nd LA frozen shipment arrives — confirm the Airbnb can receive + freeze.','CONFIRM Palo Alto candle-lighting time.'],
+  aug8:['Shabbat in Palo Alto.'],
+  aug9:['AS 42: SFO T1 1:38 PM → JFK T8 10:26 PM. Leave Airbnb ~10:30 AM.','Pre-arrange JFK → Staten Island late-night pickup.'],
+};
 
 async function build(){
   let st;
   try{ st=await (await fetch('/api/state')).json(); }
-  catch(e){ document.getElementById('dynamic').innerHTML='<p class="note">Could not load live data (offline?). Reconnect and reopen to print the latest.</p>'; return; }
+  catch(e){ document.getElementById('days').innerHTML='<p class="note">Could not load live data (offline?). Reconnect and reopen to print the latest.</p>'; return; }
 
-  // ---- Lodging & campgrounds ----
-  let h='<h2>Lodging &amp; campgrounds — full details</h2>';
-  (st.bookings||[]).forEach(b=>{
-    h+='<div class="block"><h3>'+esc(b.date_label)+' — '+esc(b.name)+'<span class="tag">'+esc(b.status||'')+'</span></h3>'+
-       kv('Address',b.address)+kv('Phone',b.phone)+kv('Site',b.site)+kv('Confirmation',b.confirmation)+
-       kv('Hookups',b.hookups)+kv('Check-in',b.check_in)+kv('Check-out',b.check_out)+
-       (b.notes?'<div class="note" style="margin-top:4px">'+esc(b.notes)+'</div>':'')+
-       '</div>';
-  });
-
-  // ---- Day by day ----
-  h+='<h2>Day by day</h2>';
-  const byDay={}; (st.events||[]).forEach(e=>{(byDay[e.day_id]=byDay[e.day_id]||[]).push(e);});
-  (st.days||[]).forEach(d=>{
-    const evs=byDay[d.day_id]||[];
-    h+='<div class="day"><h3>'+esc(d.date_label)+' — '+esc(d.title)+'<span class="tag">'+esc(d.status||'')+'</span></h3>'+
-       evs.map(e=>'<div class="ev"><span class="t">'+esc(e.time_label||'')+'</span> '+esc(e.label)+
-         (e.note?'<div class="note">'+esc(e.note)+'</div>':'')+
-         (e.link?'<div class="note">'+esc(e.link)+'</div>':'')+'</div>').join('')+
-       '</div>';
-  });
-
-  // ---- Open items ----
-  h+='<h2>Open items / to-dos</h2>';
+  // Global to-dos
   if((st.openItems||[]).length){
-    h+='<ul>'+st.openItems.map(i=>'<li>'+esc(i.text)+(i.category?' <span class="tag">'+esc(i.category)+'</span>':'')+'</li>').join('')+'</ul>';
-  } else { h+='<p class="note">All clear — no open items.</p>'; }
+    document.getElementById('todos').innerHTML='<h2>Open questions &amp; to-dos (whole trip)</h2><ul>'+
+      st.openItems.map(i=>'<li>'+esc(i.text)+(i.category?' <span class="mono note">['+esc(i.category)+']</span>':'')+'</li>').join('')+'</ul>';
+  }
 
-  // ---- Quick phone list ----
-  const phones=(st.bookings||[]).filter(b=>b.phone).map(b=>'<li>'+esc(b.name)+': <span class="mono">'+esc(b.phone)+'</span></li>');
-  if(phones.length){ h+='<h2>Campground phone numbers</h2><ul>'+phones.join('')+'</ul>'; }
+  const bookingsByDay={}; (st.bookings||[]).forEach(b=>{(bookingsByDay[b.day_id]=bookingsByDay[b.day_id]||[]).push(b);});
+  const eventsByDay={}; (st.events||[]).forEach(e=>{(eventsByDay[e.day_id]=eventsByDay[e.day_id]||[]).push(e);});
 
-  document.getElementById('dynamic').innerHTML=h;
+  let h='';
+  (st.days||[]).forEach((d,idx)=>{
+    const stays=bookingsByDay[d.day_id]||[];
+    const evs=eventsByDay[d.day_id]||[];
+    const rems=DAY_REMINDERS[d.day_id]||[];
+
+    let stayHtml='';
+    if(stays.length){
+      stayHtml=stays.map(b=>'<div class="stay"><div class="nm">🏕 Tonight: '+esc(b.name)+'<span class="st">'+esc(b.status||'')+'</span></div>'+
+        kv('Address',b.address)+kv('Phone',b.phone,true)+kv('Site #',b.site,true)+kv('Confirmation',b.confirmation,true)+
+        kv('Hookups',b.hookups)+kv('Check-in',b.check_in)+kv('Check-out',b.check_out)+
+        (b.notes?'<div class="note" style="margin-top:4px">'+esc(b.notes)+'</div>':'')+'</div>').join('');
+    } else {
+      stayHtml='<div class="stay"><div class="note">No separate campground tonight (Shabbat / travel day — see the previous night’s lodging).</div></div>';
+    }
+
+    const planHtml=evs.length?('<div class="secttitle">Plan</div>'+evs.map(e=>'<div class="ev"><span class="t">'+esc(e.time_label||'')+'</span>'+esc(e.label)+
+      (e.note?'<div class="note">'+esc(e.note)+'</div>':'')+'</div>').join('')):'';
+
+    const remHtml=rems.length?('<div class="secttitle">Reminders &amp; questions</div><ul class="rem">'+rems.map(r=>'<li>'+esc(r)+'</li>').join('')+'</ul>'):'';
+
+    h+='<section class="day"><div class="dayhead">'+
+        '<div class="daynum">Day '+(idx+1)+'</div>'+
+        '<div class="dt"><div class="dow">'+esc(fullDate(d.date_label))+'</div><div class="ti">'+esc(d.title)+'</div></div>'+
+        '<div class="daystatus">'+esc(d.status||'')+'</div></div>'+
+      '<div class="dbody">'+stayHtml+planHtml+remHtml+
+        '<div class="notesbox"><div class="secttitle">Notes</div><div class="rule"></div><div class="rule"></div><div class="rule"></div></div>'+
+      '</div></section>';
+  });
+  document.getElementById('days').innerHTML=h;
+
+  // Contacts appendix
+  const phones=(st.bookings||[]).filter(b=>b.phone).map(b=>'<li>'+esc(b.name)+' — <span class="mono">'+esc(b.phone)+'</span>'+(b.address?' · '+esc(b.address):'')+'</li>');
+  if(phones.length){
+    document.getElementById('contacts').innerHTML='<h2>Contacts — all campgrounds</h2><ul>'+phones.join('')+'</ul>';
+  }
 }
 build();
 </script>
