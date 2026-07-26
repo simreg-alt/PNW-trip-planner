@@ -31,6 +31,10 @@ export default {
           return json(await upsertBooking(env, await request.json()));
         if (pathname === "/api/booking/delete" && request.method === "POST")
           return json(await deleteBooking(env, await request.json()));
+        if (pathname === "/api/event" && request.method === "POST")
+          return json(await upsertEvent(env, await request.json()));
+        if (pathname === "/api/event/delete" && request.method === "POST")
+          return json(await deleteEvent(env, await request.json()));
         if (pathname === "/api/open-item" && request.method === "POST")
           return json(await openItem(env, await request.json()));
         if (pathname === "/api/chat/history" && request.method === "GET")
@@ -110,6 +114,44 @@ async function deleteBooking(env, b) {
   return { ok: true };
 }
 
+async function upsertEvent(env, e) {
+  const v = (x) => (x === undefined ? null : x);
+  if (e.id) {
+    await env.DB.prepare(
+      `UPDATE events SET day_id=COALESCE(?,day_id), time_label=COALESCE(?,time_label),
+         label=COALESCE(?,label), note=COALESCE(?,note), link=COALESCE(?,link),
+         link_label=COALESCE(?,link_label), sort_order=COALESCE(?,sort_order)
+       WHERE id=?`
+    ).bind(v(e.day_id), v(e.time_label), v(e.label), v(e.note), v(e.link),
+           v(e.link_label), v(e.sort_order), e.id).run();
+    await logChange(env, `Itinerary event updated: ${e.label || "#" + e.id}`, JSON.stringify(e));
+  } else {
+    // Append to the end of that day unless a position is given.
+    let order = e.sort_order;
+    if (order === undefined || order === null) {
+      const r = await env.DB.prepare(
+        "SELECT COALESCE(MAX(sort_order),0)+1 AS n FROM events WHERE day_id=?"
+      ).bind(e.day_id).first();
+      order = (r && r.n) || 1;
+    }
+    await env.DB.prepare(
+      `INSERT INTO events (day_id, time_label, label, note, link, link_label, verify, sort_order)
+       VALUES (?,?,?,?,?,?,?,?)`
+    ).bind(v(e.day_id), v(e.time_label), e.label || "", v(e.note), v(e.link),
+           v(e.link_label), e.verify ? 1 : 0, order).run();
+    await logChange(env, `Itinerary event added: ${e.label || ""}`, JSON.stringify(e));
+  }
+  return { ok: true };
+}
+
+async function deleteEvent(env, e) {
+  if (e.id) {
+    await env.DB.prepare("DELETE FROM events WHERE id=?").bind(e.id).run();
+    await logChange(env, `Itinerary event deleted (id ${e.id})`, null);
+  }
+  return { ok: true };
+}
+
 async function openItem(env, it) {
   if (it.deleteId) {
     await env.DB.prepare("DELETE FROM open_items WHERE id=?").bind(it.deleteId).run();
@@ -178,6 +220,48 @@ const TOOLS = [
     },
   },
   {
+    name: "add_event",
+    description: "Add a stop/activity to the day-by-day itinerary timeline.",
+    input_schema: {
+      type: "object",
+      properties: {
+        day_id: { type: "string", description: "e.g. aug4 — must be an existing day" },
+        time_label: { type: "string", description: "e.g. '7:30 AM', 'PM', 'Night'" },
+        label: { type: "string", description: "short title of the stop/activity" },
+        note: { type: "string", description: "details, cautions, logistics" },
+        link: { type: "string" },
+        link_label: { type: "string" },
+        verify: { type: "boolean", description: "true if drive time/hours need live checking" },
+      },
+      required: ["day_id", "label"],
+    },
+  },
+  {
+    name: "update_event",
+    description: "Edit an existing itinerary event by its id (only the fields you pass change).",
+    input_schema: {
+      type: "object",
+      properties: {
+        id: { type: "integer" },
+        day_id: { type: "string" },
+        time_label: { type: "string" },
+        label: { type: "string" },
+        note: { type: "string" },
+        sort_order: { type: "integer" },
+      },
+      required: ["id"],
+    },
+  },
+  {
+    name: "delete_event",
+    description: "Delete an itinerary event by its id.",
+    input_schema: {
+      type: "object",
+      properties: { id: { type: "integer" } },
+      required: ["id"],
+    },
+  },
+  {
     name: "add_open_item",
     description: "Add an open logistics item / to-do for the trip.",
     input_schema: {
@@ -223,8 +307,9 @@ const TOOLS = [
 ];
 
 const CUSTOM_TOOL_NAMES = [
-  "update_booking", "delete_booking", "add_open_item",
-  "resolve_open_item", "update_open_item", "delete_open_item",
+  "update_booking", "delete_booking",
+  "add_event", "update_event", "delete_event",
+  "add_open_item", "resolve_open_item", "update_open_item", "delete_open_item",
 ];
 
 async function chat(env, body) {
@@ -284,6 +369,9 @@ async function chat(env, body) {
       try {
         if (t.name === "update_booking") { await upsertBooking(env, t.input); out = "Booking saved."; }
         if (t.name === "delete_booking") { await deleteBooking(env, { id: t.input.id }); out = "Booking deleted."; }
+        if (t.name === "add_event") { await upsertEvent(env, t.input); out = "Itinerary event added."; }
+        if (t.name === "update_event") { await upsertEvent(env, t.input); out = "Itinerary event updated."; }
+        if (t.name === "delete_event") { await deleteEvent(env, { id: t.input.id }); out = "Itinerary event deleted."; }
         if (t.name === "add_open_item") { await openItem(env, { text: t.input.text, category: t.input.category }); out = "Item added."; }
         if (t.name === "resolve_open_item") { await openItem(env, { resolveId: t.input.id }); out = "Item marked done."; }
         if (t.name === "update_open_item") { await openItem(env, { editId: t.input.id, text: t.input.text, category: t.input.category }); out = "Item updated."; }
@@ -305,9 +393,19 @@ function buildSystemPrompt(state) {
     `- [#${b.id}] ${b.date_label}: ${b.name}${b.site ? " (site " + b.site + ")" : ""}${b.confirmation ? " conf " + b.confirmation : ""} [${b.status}, ${b.hookups || "?"} hookups]`
   ).join("\n");
   const items = state.openItems.map((i) => `- [#${i.id}] ${i.text}`).join("\n");
+  const itinerary = state.days.map((d) => {
+    const evs = state.events
+      .filter((e) => e.day_id === d.day_id)
+      .map((e) => `    · [#${e.id}] ${e.time_label ? e.time_label + " — " : ""}${e.label}`)
+      .join("\n");
+    return `- ${d.day_id} · ${d.date_label} · ${d.title} [${d.status}]` + (evs ? "\n" + evs : "");
+  }).join("\n");
   return `You are the trip assistant for the Regal family's Pacific Northwest RV trip (Jul 27–Aug 9, 2026).
 Family of 6 (2 adults + kids 9, 7, 3, 1), Orthodox Jewish (kosher food; no RV travel Fri eve–Sat night; modest/quiet beaches).
 29-ft Class C RV, paved roads only (rental rule). Route: Seattle → Olympic NP → Portland (Shabbat 1) → Oregon coast → Redwoods → Bodega Bay → San Leandro drop-off → Palo Alto (Shabbat 2).
+
+ITINERARY (day_id · date · title — then that day's events by [#id]):
+${itinerary}
 
 CURRENT BOOKINGS:
 ${bookings}
@@ -319,6 +417,8 @@ The [#id] shown before each booking and open item is its database id — pass it
 You can: answer questions about the itinerary, use web_search for live info (weather, road/tide conditions, hours, prices), and edit the plan with these tools:
 - update_booking — edit an existing booking (pass its [#id]) or add a new one (omit id)
 - delete_booking — remove a booking by [#id]
+- add_event / update_event / delete_event — add or change stops on the day-by-day itinerary
+  (add_event needs a valid day_id from the list above; update/delete need the event's [#id])
 - add_open_item — add a to-do
 - resolve_open_item — mark a to-do done by [#id]
 - update_open_item — reword/recategorize a to-do by [#id]
