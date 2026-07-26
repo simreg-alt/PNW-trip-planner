@@ -76,9 +76,15 @@ async function upsertBooking(env, b) {
   // D1 rejects `undefined` bindings, so coerce any missing field to null.
   const v = (x) => (x === undefined ? null : x);
   if (b.id) {
+    // COALESCE so a partial edit (e.g. the assistant changing only `notes`)
+    // never wipes fields it didn't mention — that's how addresses got lost.
     await env.DB.prepare(
-      `UPDATE bookings SET name=?, site=?, confirmation=?, status=?, hookups=?,
-         check_in=?, check_out=?, address=?, phone=?, notes=?, updated_at=datetime('now')
+      `UPDATE bookings SET
+         name=COALESCE(?,name), site=COALESCE(?,site), confirmation=COALESCE(?,confirmation),
+         status=COALESCE(?,status), hookups=COALESCE(?,hookups),
+         check_in=COALESCE(?,check_in), check_out=COALESCE(?,check_out),
+         address=COALESCE(?,address), phone=COALESCE(?,phone), notes=COALESCE(?,notes),
+         updated_at=datetime('now')
        WHERE id=?`
     ).bind(v(b.name), v(b.site), v(b.confirmation), v(b.status), v(b.hookups),
            v(b.check_in), v(b.check_out), v(b.address), v(b.phone), v(b.notes), b.id).run();
@@ -155,6 +161,8 @@ const TOOLS = [
         hookups: { type: "string" },
         check_in: { type: "string" },
         check_out: { type: "string" },
+        address: { type: "string", description: "full street address incl. city, state, ZIP" },
+        phone: { type: "string" },
         notes: { type: "string" },
       },
       required: ["name"],
