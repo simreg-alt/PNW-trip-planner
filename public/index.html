@@ -168,20 +168,51 @@
 
 <script>
 let STATE=null;
+// Offline copy: every successful load is saved to localStorage, so the trip is
+// readable with zero connectivity (Redwoods, ferries, canyons) even if the
+// service-worker cache has been evicted.
+const SAVE_KEY='regalTripState';
+function saveOffline(s){
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify({at:Date.now(),state:s})); }catch(e){}
+}
+function readOffline(){
+  try{ return JSON.parse(localStorage.getItem(SAVE_KEY)||'null'); }catch(e){ return null; }
+}
+function normalize(s){
+  return {days:s.days||[],events:s.events||[],bookings:s.bookings||[],
+          openItems:s.openItems||[],changeLog:s.changeLog||[]};
+}
+function ago(ts){
+  const m=Math.round((Date.now()-ts)/60000);
+  if(m<1) return 'just now';
+  if(m<60) return m+' min ago';
+  const h=Math.round(m/60); if(h<24) return h+' hr ago';
+  return Math.round(h/24)+' days ago';
+}
+function paint(){ renderTimeline(); renderBookings(); renderTodo(); }
+function setStatus(txt,offline){
+  const el=document.getElementById('statusline');
+  el.textContent=txt; el.style.color = offline ? 'var(--rust)' : '';
+}
+
 async function load(){
+  // 1) Paint the saved copy immediately so the app is useful with no signal.
+  const cached=readOffline();
+  if(cached&&cached.state){ STATE=normalize(cached.state); paint(); }
+
+  // 2) Then try the network and refresh if it works.
   try{
     const r=await fetch('/api/state'); const s=await r.json();
-    if(!s||!Array.isArray(s.days)) throw new Error(s&&s.error||'no data');
-    STATE={days:s.days||[],events:s.events||[],bookings:s.bookings||[],
-           openItems:s.openItems||[],changeLog:s.changeLog||[]};
+    if(!s||!Array.isArray(s.days)) throw new Error((s&&s.error)||'no data');
+    STATE=normalize(s); saveOffline(s); paint();
+    setStatus(STATE.bookings.length+' nights booked · '+STATE.openItems.length+' open items',false);
   }catch(e){
-    document.getElementById('statusline').textContent=
-      'Offline — showing nothing yet. Reconnect to load the plan.';
-    return;
+    if(cached&&cached.state){
+      setStatus('⚠ Offline — saved copy from '+ago(cached.at)+'. Viewing works; edits won\'t save.',true);
+    }else{
+      setStatus('⚠ Offline and nothing saved yet. Open once with signal to store the trip.',true);
+    }
   }
-  renderTimeline(); renderBookings(); renderTodo();
-  document.getElementById('statusline').textContent =
-    STATE.bookings.length + ' nights booked · ' + STATE.openItems.length + ' open items';
 }
 function badge(s){return '<span class="badge b-'+s+'">'+s.toUpperCase()+'</span>';}
 
@@ -237,8 +268,14 @@ function renderTimeline(){
 }
 function esc(s){return (s==null?'':String(s)).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
 async function post(url,body){
-  const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
-  return r.json();
+  try{
+    const r=await fetch(url,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+    return await r.json();
+  }catch(e){
+    // Writes need the server — never pretend a change saved when it didn't.
+    alert('No connection — that change was NOT saved.\nIt will need to be redone once you have signal.');
+    return {error:'offline'};
+  }
 }
 function catOpts(sel){return ['logistics','tank','food','transport'].map(o=>'<option'+(o===sel?' selected':'')+'>'+o+'</option>').join('');}
 function statusOpts(sel){return ['booked','backup','shabbat','planned'].map(o=>'<option'+(o===sel?' selected':'')+'>'+o+'</option>').join('');}

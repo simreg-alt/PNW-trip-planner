@@ -1,6 +1,6 @@
 // Regal Trip service worker — makes the app installable and usable offline
 // (handy for no-signal spots like the Redwoods).
-const CACHE = 'regal-trip-v1';
+const CACHE = 'regal-trip-v2';
 const SHELL = [
   '/', '/index.html', '/print.html', '/manifest.webmanifest',
   '/icon-192.png', '/icon-512.png',
@@ -8,7 +8,12 @@ const SHELL = [
 
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open(CACHE).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting())
+    caches.open(CACHE)
+      .then((c) => c.addAll(SHELL)
+        // Warm the trip data too, so a freshly installed app is usable even if
+        // it goes offline before the first manual refresh. Non-fatal if it fails.
+        .then(() => c.add('/api/state').catch(() => {})))
+      .then(() => self.skipWaiting())
   );
 });
 

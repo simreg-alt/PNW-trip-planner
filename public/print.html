@@ -119,9 +119,21 @@ const DAY_REMINDERS={
 };
 
 async function build(){
-  let st;
-  try{ st=await (await fetch('/api/state')).json(); }
-  catch(e){ document.getElementById('days').innerHTML='<p class="note">Could not load live data (offline?). Reconnect and reopen to print the latest.</p>'; return; }
+  // Works with no signal: falls back to the copy the main app saved.
+  let st=null;
+  try{
+    const s=await (await fetch('/api/state')).json();
+    if(s&&Array.isArray(s.days)) st=s;
+  }catch(e){}
+  if(!st){
+    try{
+      const c=JSON.parse(localStorage.getItem('regalTripState')||'null');
+      if(c&&c.state){ st=c.state;
+        document.getElementById('days').insertAdjacentHTML('beforebegin',
+          '<p class="note">⚠ Offline — printing the saved copy stored on this device.</p>'); }
+    }catch(e){}
+  }
+  if(!st){ document.getElementById('days').innerHTML='<p class="note">No data available offline. Open the app once with signal, then reprint.</p>'; return; }
 
   // Global to-dos
   if((st.openItems||[]).length){
