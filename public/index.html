@@ -4,6 +4,13 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Regal Family Trip Command Center</title>
+<meta name="theme-color" content="#2E4A3A" />
+<link rel="manifest" href="/manifest.webmanifest" />
+<link rel="apple-touch-icon" href="/icon-180.png" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Trip" />
 <style>
   :root{
     --bg:#F2F4F0; --card:#fff; --ink:#182A20; --sub:#5C6B60; --pine:#2E4A3A;
@@ -18,6 +25,11 @@
   h1{font-size:1.7rem;line-height:1.2;margin:.2em 0}
   .kicker{font-family:ui-monospace,Menlo,monospace;font-size:.72rem;letter-spacing:.08em;
     text-transform:uppercase;color:var(--pine)}
+  .toplinks{display:flex;gap:10px;flex-wrap:wrap;margin-top:8px}
+  .tlink{display:inline-block;font-family:ui-monospace,Menlo,monospace;font-size:.74rem;
+    color:var(--pine);background:var(--pineSoft);border:0;border-radius:8px;padding:6px 10px;
+    cursor:pointer;text-decoration:none}
+  .tlink:hover{background:#d7e0d7}
   .tabs{display:flex;gap:4px;background:var(--pineSoft);padding:4px;border-radius:12px;margin:18px 0}
   .tab{flex:1;border:0;background:transparent;color:var(--sub);font-weight:600;font-size:.9rem;
     padding:9px;border-radius:9px;cursor:pointer;font-family:inherit}
@@ -115,6 +127,10 @@
   <div class="kicker">Regal family · Jul 27 – Aug 9, 2026 · 29-ft Class C</div>
   <h1>Seattle → Olympic → Portland → Oregon Coast → Redwoods → SF</h1>
   <div class="muted" id="statusline">Loading live plan…</div>
+  <div class="toplinks">
+    <a href="/print.html" class="tlink">🖨 Printable itinerary</a>
+    <button id="installBtn" class="tlink" style="display:none">⬇ Install app</button>
+  </div>
 
   <div class="tabs">
     <button class="tab active" data-tab="timeline">Timeline</button>
@@ -371,6 +387,25 @@ async function send(){
   }catch(e){thinking.textContent='Error: '+e.message;}
 }
 load();
+
+// ---- installable app (PWA) ----
+if('serviceWorker' in navigator){
+  window.addEventListener('load',()=>navigator.serviceWorker.register('/sw.js').catch(()=>{}));
+}
+let deferredPrompt=null;
+window.addEventListener('beforeinstallprompt',(e)=>{
+  e.preventDefault(); deferredPrompt=e;
+  const b=document.getElementById('installBtn'); if(b) b.style.display='inline-block';
+});
+(function(){
+  const b=document.getElementById('installBtn');
+  if(b) b.onclick=async()=>{
+    if(!deferredPrompt)return;
+    deferredPrompt.prompt(); await deferredPrompt.userChoice;
+    deferredPrompt=null; b.style.display='none';
+  };
+})();
+window.addEventListener('appinstalled',()=>{const b=document.getElementById('installBtn'); if(b) b.style.display='none';});
 </script>
 </body>
 </html>
